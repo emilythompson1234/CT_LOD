@@ -1,0 +1,48 @@
+%% Read in CT Image of Choice
+
+%info = dicominfo(
+img = dicomread('C:\Users\ethompson\Desktop\1_Body_90kV\zpafCsLOD.CT.Private_Layman.2259.2.2019.12.16.15.23.48.286.28536003.dcm') %image is stored as type unit16
+%img = uint16(img);
+img = double(img);
+[m,n] = size(img);
+
+B1 = zeros(m,n);
+S1 = zeros(m,n);
+
+%% Draw ROIs
+% Show figure
+figure
+imshow(img,[])
+
+roi = imellipse %('Color','k','Label','My Circle');
+%roi1 = images.roi.Circle(gca,'Center', [1000 1000], 'Radius', 500);
+
+%% Set HU Value Range
+HU = [-1000, 1000];
+
+%% This makes it work?
+for i=1:m
+  for j=1:n
+      P=img(i,j); %This contain the information of the image
+      if(P>HU(1,1) && P<HU(1,2)) % Make the condition that allows compare the information in the variable "P"
+          B1(i,j) = 1; % Make a bit image and change the values of zeros for ones
+          S1(i,j) = P; % This transform the value of P that contain the image information
+      end
+  end
+end
+B1=uint8(B1); % Transforms the double-to-single bit image
+S1=uint8(S1*255);  % This is the same that the line above but multiplies the result for 255
+%And then for show it:
+figure(1)
+subplot(2,1,1);
+imshow(S1);
+title('Image treated');
+subplot(2,1,2);
+imshow(img*255); % This multiplies the values of the image just to observe them
+title('Original Image');
+
+%% Calculate HU Value
+info = dicominfo('C:\Users\ethompson\Desktop\1_Body_90kV\zpafCsLOD.CT.Private_Layman.2259.2.2019.12.16.15.23.48.286.28536003.dcm');
+b = info.RescaleIntercept;
+m = info.RescaleScale;
+HU = m .* img + b;
