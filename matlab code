@@ -6,19 +6,40 @@ close all;
 clear all;
 
 %% The DICOM Filename
-folderFileName = '/Users/emilythompson/Desktop/CT LOD/zpafCsLOD.CT.Private_Layman.2259.3.2019.12.16.15.23.48.286.28536014.dcm';
+folderFileName = 'C:\Users\ethompson\Desktop\1_Body_90kV\zpafCsLOD.CT.Private_Layman.2259.3.2019.12.16.15.23.48.286.28536014.dcm';
 
 %% Read in tha Image
 image = dicomread(folderFileName); %uint16 format - only allows 2^16-1 values
 dinfo = dicominfo(folderFileName);
 img = double(image); %convert to double because we have more values than uint16 can handle
 
-%% Display Image for Shits and Giggles
+%% Calculate HU Values From DICOM Data
+b = dinfo.RescaleIntercept; %Rescale values from DICOM data
+m = dinfo.RescaleSlope; %Rescale values from DICOM data
+HUImage = m.* img + b; %Calculate HU using basic y=mx+b equation - scale pixel intensities to Hounsfield scale
+
+%Another way to do it that does the same thing:
+%HUImage = double(dicomread(folderFileName))*dinfo.RescaleSlope + dinfo.RescaleIntercept;
+
+%% Display image to make sure you got the right one
 figure
 imshow(img,[],'InitialMagnification','fit') %empty brackets tell it to display the maximum to minimum value. without them, the image appears totally black or white because it's only showing a portion of the value range. 
 %Unsure if I like this initial magnification fit thing - TBD 
 
 %% Draw ROIs
+%Effort to make all ROIs the same size... didn't work
+%Ginput defines a point with a mouse click. I tried to use this to define
+%the center of the ROI and have a set radius but it was still variable and
+%therefore useless using this method.
+%ROI1 = drawcircle('Label','ROI1','Center', [ginput(1)],'Radius',0.05,'LineWidth',0.1, 'Color', 'b')
+%ROI2 = drawcircle('Label','ROI1','Center', [ginput(1)],'Radius',0.05,'LineWidth',0.1, 'Color', 'r')
+%ROI3 = drawcircle('Label','ROI1','Center', [ginput(1)],'Radius',0.05,'LineWidth',0.1, 'Color', 'y')
+%ROI4 = drawcircle('Label','ROI1','Center', [ginput(1)],'Radius',0.05,'LineWidth',0.1, 'Color', 'm')
+%ROI5 = drawcircle('Label','ROI1','Center', [ginput(1)],'Radius',0.05,'LineWidth',0.1, 'Color', 'c')
+%ROI6 = drawcircle('Label','ROI1','Center', [ginput(1)],'Radius',0.05,'LineWidth',0.1, 'Color', 'g')
+%ROI7 = drawcircle('Label','ROI1','Center', [ginput(1)],'Radius',0.05,'LineWidth',0.1, 'Color', 'w')
+%ROI8 = drawcircle('Label','ROI1','Center', [ginput(1)],'Radius',0.05,'LineWidth',0.1, 'Color', 'k')
+
 ROI1 = drawcircle('Label','ROI1', 'LineWidth',0.1, 'Color', 'b')
 ROI2 = drawcircle('Label','ROI2', 'LineWidth',0.1, 'Color', 'r')
 ROI3 = drawcircle('Label','ROI3', 'LineWidth',0.1, 'Color', 'y')
@@ -27,15 +48,72 @@ ROI5 = drawcircle('Label','ROI5', 'LineWidth',0.1, 'Color', 'c')
 ROI6 = drawcircle('Label','ROI6', 'LineWidth',0.1, 'Color', 'g')
 ROI7 = drawcircle('Label','ROI7', 'LineWidth',0.1, 'Color', 'w')
 ROI8 = drawcircle('Label','ROI8', 'LineWidth',0.1, 'Color', 'k')
+ROI_Background = drawcircle('Label','ROI8', 'LineWidth',0.1, 'Color', 'y')
+ 
+%% Save ROIs in a useable format
 
-%% Calculate HU Values Within the ROI From DICOM Data
-b = dinfo.RescaleIntercept;
-m = dinfo.RescaleSlope;
-HU = m .* img + b;
+% Create binary mask image from ROI
+Mask1 = createMask(ROI1);
+Mask1 = double(Mask1);
+Mask2 = createMask(ROI2);
+Mask2 = double(Mask2);
+Mask3 = createMask(ROI3);
+Mask3 = double(Mask3);
+Mask4 = createMask(ROI4);
+Mask4 = double(Mask4);
+Mask5 = createMask(ROI5);
+Mask5 = double(Mask5);
+Mask6 = createMask(ROI6);
+Mask6 = double(Mask6);
+Mask7 = createMask(ROI7);
+Mask7 = double(Mask7);
+Mask8 = createMask(ROI8);
+Mask8 = double(Mask8);
+Mask_Background = createMask(ROI_Background);
+Mask_Background = double(Mask_Background);
 
-%HUImage = double(dicomread(folderFileName))*dinfo.RescaleSlope + dinfo.RescaleIntercept;
+% Map HU Values to these ROI Masks
+Standard1 = HUImage.*Mask1;
+Standard2 = HUImage.*Mask2;
+Standard3 = HUImage.*Mask3;
+Standard4 = HUImage.*Mask4;
+Standard5 = HUImage.*Mask5;
+Standard6 = HUImage.*Mask6;
+Standard7 = HUImage.*Mask7;
+Standard8 = HUImage.*Mask8;
+Background = HUImage.*Mask_Background;
 
+%% Calculate Mean HU Within Each ROI
+meanHU_Standard1 = mean(Standard1,'all')
+meanHU_Standard2 = mean(Standard2,'all')
+meanHU_Standard3 = mean(Standard3,'all')
+meanHU_Standard4 = mean(Standard4,'all')
+meanHU_Standard5 = mean(Standard5,'all')
+meanHU_Standard6 = mean(Standard6,'all')
+meanHU_Standard7 = mean(Standard7,'all')
+meanHU_Standard8 = mean(Standard8,'all')
+meanHU_Background = mean(Background,'all')
 
-% extract mean HU:
-values = myImage(ROI);
-meanHU = mean(values)
+%% Calculate Standard Devlation Within Each ROI
+stdev_Standard1 = std2(Standard1)
+stdev_Standard2 = std2(Standard2)
+stdev_Standard3 = std2(Standard3)
+stdev_Standard4 = std2(Standard4)
+stdev_Standard5 = std2(Standard5)
+stdev_Standard6 = std2(Standard6)
+stdev_Standard7 = std2(Standard7)
+stdev_Standard8 = std2(Standard8)
+stdev_Background = std2(Background)
+
+%% Plot Mean HU vs. Concentration
+Concentration = [1, 2, 3, 4, 5, 6, 7, 8]
+HU_Values = [meanHU_Standard1, meanHU_Standard2, meanHU_Standard3, meanHU_Standard4, meanHU_Standard5, meanHU_Standard6, meanHU_Standard7, meanHU_Standard8]%, meanHU_Background]
+figure
+plot(Concentration, HU_Values)
+hold on
+%Assess Linearity
+p = polyfit(Concentration, HU_Values, 1)
+f = polyval(p, Concentration)
+plot(Concentration, HU_Values, 'o', Concentration, f, '-')
+legend('data', 'linear fit')
+hold off
