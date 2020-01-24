@@ -1,6 +1,6 @@
 %% Created by Emily A. Thompson
-% December 17, 2020
-% Last Updated: December 19, 2020
+% December 17, 2019
+% Last Updated: January 23, 2020
 
 close all;
 clear all;
@@ -106,14 +106,14 @@ stdev_Standard8 = std2(Standard8)
 stdev_Background = std2(Background)
 
 %% Plot Mean HU vs. Concentration
-Concentration = [1, 2, 3, 4, 5, 6, 7, 8]
-HU_Values = [meanHU_Standard1, meanHU_Standard2, meanHU_Standard3, meanHU_Standard4, meanHU_Standard5, meanHU_Standard6, meanHU_Standard7, meanHU_Standard8]%, meanHU_Background]
+Concentration = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+HU_Values = [meanHU_Standard1, meanHU_Standard2, meanHU_Standard3, meanHU_Standard4, meanHU_Standard5, meanHU_Standard6, meanHU_Standard7, meanHU_Standard8, meanHU_Background]
 figure
 plot(Concentration, HU_Values)
 hold on
 %Assess Linearity
-p = polyfit(Concentration, HU_Values, 1)
-f = polyval(p, Concentration)
+p = polyfit(Concentration, HU_Values, 1);
+f = polyval(p, Concentration);
 plot(Concentration, HU_Values, 'o', Concentration, f, '-')
 legend('data', 'linear fit')
 hold off
